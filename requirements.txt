@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+
+# Base de données
+mysql-connector-python
+
+# IA / NLP
+transformers
+torch
+sentence-transformers
+huggingface-hub
+
+# Utilitaires
+numpy
+scikit-learn
