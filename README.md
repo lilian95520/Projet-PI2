@@ -24,7 +24,7 @@ python --version
 node -v
 npm -v
 ```
-#Installation
+# Installation
 BackEnd (Python)
 Dans le dossier du projet :
 ```bash
@@ -38,7 +38,7 @@ npm install
 npm install axios
 ```
 
-#Lancer l'application
+# Lancer l'application
 1. Ouvrir XAMPP et lancer MySQL.
 
 2. Lancer le backEnd
