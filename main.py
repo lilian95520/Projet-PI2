@@ -4,6 +4,8 @@ import torch
 from database_manager import init_db, log_interaction
 import numpy as np
 from sentence_transformers import CrossEncoder
+from fastapi.middleware.cors import CORSMiddleware
+
 
 #Configuration
 reranker = CrossEncoder('BAAI/bge-reranker-v2-m3')
@@ -39,7 +41,7 @@ def ask_helpcenter(query):
     
     return reply
 
-print("combien d'absences en tant qu'alternant max ? :", ask_helpcenter("combien d'absences en tant qu'alternant max ?"))
-print("comment adopter un chien :", ask_helpcenter("comment adopter un chien"))
-print("Je ne veux pas la bourse :", ask_helpcenter("Je ne veux pas la bourse"))
-print("Je veux la bourse :",ask_helpcenter("Je veux la bourse"))
+# print("combien d'absences en tant qu'alternant max ? :", ask_helpcenter("combien d'absences en tant qu'alternant max ?"))
+# print("comment adopter un chien :", ask_helpcenter("comment adopter un chien"))
+# print("Je ne veux pas la bourse :", ask_helpcenter("Je ne veux pas la bourse"))
+# print("Je veux la bourse :",ask_helpcenter("Je veux la bourse"))
