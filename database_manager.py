@@ -1,8 +1,32 @@
 import mysql.connector
+from mysql.connector import pooling
 from config import DB_CONFIG
 
+# Pool de connexions pour éviter les problèmes de connexion
+_connection_pool = None
+
+def get_pool():
+    """Retourne le pool de connexions (singleton)."""
+    global _connection_pool
+    if _connection_pool is None:
+        try:
+            _connection_pool = pooling.MySQLConnectionPool(
+                pool_name="helpcenter_pool",
+                pool_size=5,
+                pool_reset_session=True,
+                **DB_CONFIG
+            )
+            print("✅ Pool de connexions MySQL créé")
+        except Exception as e:
+            print(f"❌ Erreur création pool : {e}")
+            _connection_pool = None
+    return _connection_pool
+
 def get_connection():
-    """Crée une connexion en utilisant la config sécurisée."""
+    """Récupère une connexion du pool."""
+    pool = get_pool()
+    if pool:
+        return pool.get_connection()
     return mysql.connector.connect(**DB_CONFIG)
 
 def init_db():
@@ -28,6 +52,7 @@ def init_db():
 
 def log_interaction(query, response, score):
     """Enregistre une interaction."""
+    conn = None
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -35,6 +60,9 @@ def log_interaction(query, response, score):
         cursor.execute(sql, (query, response, float(score)))
         conn.commit()
         cursor.close()
-        conn.close()
+        print(f"✅ Interaction enregistrée (score: {score:.4f})")
     except Exception as e:
         print(f"❌ Erreur lors de l'enregistrement : {e}")
+    finally:
+        if conn:
+            conn.close()
