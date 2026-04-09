@@ -2,6 +2,10 @@ fastapi
 uvicorn
 pydantic
 python-multipart
+typing-extensions>=4.12.2
+pandas
+langdetect
+python-dotenv
 
 # Base de données
 mysql-connector-python

@@ -46,6 +46,16 @@
     <!-- Input Footer -->
     <footer class="footer">
       <div class="input-section">
+        <!-- Mail Prompt Inline -->
+        <div v-if="showMailPrompt" class="mail-prompt-inline">
+          <div class="mail-prompt-content">
+            <p class="mail-prompt-text">Voulez-vous envoyer un mail au support?</p>
+            <div class="mail-prompt-buttons">
+              <button class="btn-mail-yes" @click="sendEmail">Oui</button>
+              <button class="btn-mail-no" @click="rejectEmail">Non</button>
+            </div>
+          </div>
+        </div>
         <div class="input-wrapper">
           <input
             v-model="query"
@@ -73,6 +83,19 @@ const API_BASE = "http://localhost:8000";
 const query = ref("");
 const loading = ref(false);
 const messagesEl = ref(null);
+const showMailPrompt = ref(false);
+const lastEmptyQuery = ref("");
+
+// Liste des thématiques disponibles
+const categories = [
+  "Installation",
+  "Configuration",
+  "Utilisation basique",
+  "Dépannage",
+  "Fonctionnalités avancées",
+  "FAQ",
+  "Tutoriels",
+];
 
 const messages = ref([
   {
@@ -112,10 +135,22 @@ async function send() {
     const res = await axios.post(`${API_BASE}/ask`, { query: q });
     const html = res.data?.html ?? "";
 
+    // Vérifier si la réponse du modèle est un message "pas de réponse"
+    const isNoResponse = html.toLowerCase().includes("désolé") || 
+                        html.toLowerCase().includes("pas trouvé") ||
+                        html.toLowerCase().includes("pas de réponse") ||
+                        html.toLowerCase().includes("unable to find") ||
+                        html.toLowerCase().includes("no response");
+
+    if (isNoResponse) {
+      lastEmptyQuery.value = q;
+      showMailPrompt.value = true;
+    }
+
     messages.value.push({
       id: crypto.randomUUID(),
       role: "assistant",
-      text: html || "<p>Pas de réponse disponible.</p>",
+      text: html,
       isHtml: true,
     });
   } catch (e) {
@@ -131,7 +166,21 @@ async function send() {
     if (messagesEl.value) {
       messagesEl.value.scrollTop = messagesEl.value.scrollHeight;
     }
+    // Afficher le prompt mail un peu après pour que le DOM se mette à jour
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
+}
+
+function sendEmail() {
+  const subject = "Question sans réponse - Help Center";
+  const body = `Bonjour,\n\nJ'ai posé la question suivante sans recevoir de réponse:\n\n"${lastEmptyQuery.value}"\n\nPouvez-vous m'aider?\n\nMerci.`;
+  const mailtoLink = `mailto:lilian.allio@edu.devinci.fr?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+  showMailPrompt.value = false;
+}
+
+function rejectEmail() {
+  showMailPrompt.value = false;
 }
 </script>
 
@@ -459,5 +508,86 @@ async function send() {
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
   }
+}
+
+/* Mail Prompt */
+.mail-prompt {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mail-prompt-inline {
+  background: #fef3c7;
+  border-top: 2px solid #fcd34d;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mail-prompt-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mail-prompt-text {
+  margin: 0;
+  color: #92400e;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.mail-prompt-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-mail-yes,
+.btn-mail-no {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.btn-mail-yes {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-mail-yes:hover {
+  background: #1d4ed8;
+}
+
+.btn-mail-no {
+  background: white;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.btn-mail-no:hover {
+  background: #fef9e7;
 }
 </style>
